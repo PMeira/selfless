@@ -20,9 +20,9 @@ setup(
     description="""A small experimental module for implicit "self" support in Python (in some restricted contexts)""",
     author="Paulo Meira",
     author_email="10246101+PMeira@users.noreply.github.com",
-    version='0.0.1',
+    version='0.0.2',
     license="BSD",
-    modules=['selfless'],
+    py_modules=['selfless'],
     zip_safe=True,
     long_description=long_description,
     classifiers=[
