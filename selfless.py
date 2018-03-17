@@ -11,7 +11,7 @@ class SelflessTransformer(ast.NodeTransformer):
         self.globals_dict = dict(globals_dict)
         self.globals_dict.update(locals_dict)
         self.local_names = set()
-        self.builtins_names = dir(globals_dict['__builtins__'])
+        self.builtins_names = set(globals_dict['__builtins__'].keys())
         self.found_variables = set()
 
 
