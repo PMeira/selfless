@@ -3,6 +3,8 @@ selfless: A small experimental module for implicit "self" support in Python (in 
 '''
 import sys, ast, inspect, types, textwrap, functools
 
+PY2 = sys.version_info < (3, 0, 0)
+
 class SelflessTransformer(ast.NodeTransformer):
     def __init__(self, variables, globals_dict, locals_dict):
         ast.NodeTransformer.__init__(self)
@@ -11,14 +13,23 @@ class SelflessTransformer(ast.NodeTransformer):
         self.globals_dict = dict(globals_dict)
         self.globals_dict.update(locals_dict)
         self.local_names = set()
-        self.builtins_names = set(globals_dict['__builtins__'].keys())
+        _built_ins = globals_dict['__builtins__']
+        if isinstance(_built_ins, dict):
+            self.builtins_names = set(_built_ins.keys())
+        else:
+            self.builtins_names = set(dir(_built_ins))
+        
         self.found_variables = set()
 
 
     def visit_FunctionDef(self, node):
         local_names_original = set(self.local_names)
-        for arg in node.args.args:
-            self.local_names.add(arg.arg)
+        if PY2:
+            for arg in node.args.args:
+                self.local_names.add(arg.id)
+        else:
+            for arg in node.args.args:
+                self.local_names.add(arg.arg)
 
         if node.args.vararg is not None:
             self.local_names.add(node.args.vararg.arg)
@@ -26,8 +37,9 @@ class SelflessTransformer(ast.NodeTransformer):
         if node.args.kwarg is not None:
             self.local_names.add(node.args.kwarg.arg)
 
-        for arg in node.args.kwonlyargs:
-            self.local_names.add(arg.arg)
+        if not PY2:
+            for arg in node.args.kwonlyargs:
+                self.local_names.add(arg.arg)
             
         for stmt in node.body:
             self.visit(stmt)
@@ -157,5 +169,3 @@ def selfless(cls, variables=None, globals_dict=None, locals_dict=None, restrict_
     return globals_dict[cls.__name__]
     
 selfless_with = functools.partial(selfless, restrict_to_with=True)
-
-    
